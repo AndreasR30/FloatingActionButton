@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/circle_item">
+        <transition>
+            <item android:id="@+id/circle_item_1">
+                <shape android:shape="oval">
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+            <item android:id="@+id/circle_item_2">
+                <shape android:shape="oval">
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+        </transition>
+    </item>
+</layer-list>

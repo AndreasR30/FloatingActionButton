@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FloatingActionButton">
+        <attr name="fab_icon" format="reference"/>
+        <attr name="fab_icon_size" format="dimension"/>
+        <attr name="fab_color" format="color"/>
+        <attr name="fab_radius" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="CustomStates">
+        <attr name="state_custom_0" format="boolean"/>
+        <attr name="state_custom_1" format="boolean"/>
+        <attr name="state_custom_2" format="boolean"/>
+        <attr name="state_custom_3" format="boolean"/>
+        <attr name="state_custom_4" format="boolean"/>
+    </declare-styleable>
+</resources>

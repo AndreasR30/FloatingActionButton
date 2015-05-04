@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#1f000000">
+
+    <item android:id="@+id/circle_item">
+        <transition>
+            <item android:id="@+id/circle_item_1">
+                <shape>
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+            <item android:id="@+id/circle_item_2">
+                <shape>
+                    <solid android:color="#00000000" />
+                </shape>
+            </item>
+        </transition>
+    </item>
+</ripple>

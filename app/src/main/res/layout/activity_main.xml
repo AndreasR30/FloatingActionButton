@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.andreas.library.MorphLayout
+        android:id="@+id/layer_morphableLayout"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="#1f000000">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Das ist ein Test"
+                android:layout_centerInParent="true"/>
+        </RelativeLayout>
+
+    </com.andreas.library.MorphLayout>
+
+    <com.andreas.library.FloatingActionButton
+        android:id="@+id/fab_floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        app:fab_radius="@dimen/fab_radius_default"
+        app:fab_color="@color/fab_color"
+        app:fab_icon="@drawable/fab_icon"/>
+
+</RelativeLayout>

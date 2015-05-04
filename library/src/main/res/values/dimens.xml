@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fab_radius_default">28dp</dimen>
+    <dimen name="fab_redius_mini">20dp</dimen>
+</resources>
