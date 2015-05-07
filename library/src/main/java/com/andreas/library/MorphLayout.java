@@ -41,6 +41,7 @@ public class MorphLayout extends FrameLayout {
 
     // Others
     private OnMorphListener mListener;
+    private Animator mFadeAnimator;
 
     public MorphLayout(Context context) {
 
@@ -260,7 +261,7 @@ public class MorphLayout extends FrameLayout {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void revert(Point circleCenter, boolean animateChildren) {
 
-        if (mState != State.MORPHED) {
+        if (mState != State.MORPHED || (mFadeAnimator != null && mFadeAnimator.isRunning())) {
             return;
         }
 
@@ -387,9 +388,9 @@ public class MorphLayout extends FrameLayout {
             if(animate && isHoneycombOrHigher()) {
                 child.setAlpha(show ? 0 : 1);
                 child.setVisibility(VISIBLE);
-                ObjectAnimator animator = ObjectAnimator.ofFloat(child, "alpha", show ? 1 : 0);
-                animator.setDuration(DURATION_FADE);
-                animator.start();
+                mFadeAnimator = ObjectAnimator.ofFloat(child, "alpha", show ? 1 : 0);
+                mFadeAnimator.setDuration(DURATION_FADE);
+                mFadeAnimator.start();
             } else {
                 child.setVisibility(show ? VISIBLE : INVISIBLE);
             }
