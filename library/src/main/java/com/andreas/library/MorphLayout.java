@@ -3,6 +3,7 @@ package com.andreas.library;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -23,8 +24,6 @@ import android.widget.FrameLayout;
 
 public class MorphLayout extends FrameLayout {
 
-    private static final int DURATION_MOVE = 250;
-    private static final int DURATION_SCALE = 80;
     private static final int DURATION_FADE = 250;
 
     private FloatingActionButton mFab;
@@ -208,25 +207,37 @@ public class MorphLayout extends FrameLayout {
         Point[] corners = {new Point(0, 0), new Point(0, getWidth()), new Point(getWidth(), getHeight()), new Point(0, getHeight())};
         int diameter1 = mFab.getCircleBounds().width();
         int diameter2 = calculateDiameter(circleCenter, corners);
+        //noinspection SuspiciousNameCombination
+        int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
+        int scaleDuration = diameter2 / 14;
 
         final ObjectAnimator animX = ObjectAnimator.ofFloat(mFab, "translationX", offsetX);
-        animX.setDuration(DURATION_MOVE);
+        animX.setDuration(translateDuration);
         animX.setInterpolator(new LinearInterpolator());
 
         final ObjectAnimator animY = ObjectAnimator.ofFloat(mFab, "translationY", offsetY);
-        animY.setDuration(DURATION_MOVE);
+        animY.setDuration(translateDuration);
         animY.setInterpolator(new AccelerateInterpolator(2));
+        animY.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+
+                mFab.getIcon().setAlpha((int) (0xFF * (1 - animation.getAnimatedFraction())));
+            }
+        });
 
         final ObjectAnimator animDiameter = ObjectAnimator.ofInt(this, "circleDiameter", diameter1, diameter2);
-        animDiameter.setDuration(DURATION_SCALE);
+        animDiameter.setDuration(scaleDuration);
         animDiameter.setInterpolator(new LinearInterpolator());
-        animDiameter.setStartDelay(DURATION_MOVE);
+        animDiameter.setStartDelay(translateDuration);
         animDiameter.addListener(new AnimatorListenerAdapter() {
 
             @Override
             public void onAnimationStart(Animator animation) {
 
                 mFab.setVisibility(INVISIBLE);
+                mFab.getIcon().setAlpha(0xFF);
             }
 
             @Override
@@ -268,6 +279,7 @@ public class MorphLayout extends FrameLayout {
         mFab.setVisibility(INVISIBLE);
         mFab.setTranslationX(0);
         mFab.setTranslationY(0);
+        mCirclePaint.setColor(mFab.getCurrentColor());
 
         if(!isHoneycombOrHigher()) {
             setVisibilityChildren(false, false);
@@ -275,7 +287,6 @@ public class MorphLayout extends FrameLayout {
             if(mListener != null) {
                 mListener.onRevertStart();
             }
-            mCirclePaint.setColor(mFab.getCurrentColor());
             mFab.setVisibility(VISIBLE);
             mState = State.NONE;
             invalidate();
@@ -309,11 +320,12 @@ public class MorphLayout extends FrameLayout {
         Point[] corners = {new Point(0, 0), new Point(0, getWidth()), new Point(getWidth(), getHeight()), new Point(0, getHeight())};
         int diameter1 = calculateDiameter(circleCenter, corners);
         int diameter2 = mFab.getCircleBounds().width();
-
-        mCirclePaint.setColor(mFab.getCurrentColor());
+        //noinspection SuspiciousNameCombination
+        int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
+        int scaleDuration = diameter1 / 14;
 
         final ObjectAnimator animDiameter = ObjectAnimator.ofInt(this, "circleDiameter", diameter1, diameter2);
-        animDiameter.setDuration(DURATION_SCALE);
+        animDiameter.setDuration(scaleDuration);
         animDiameter.setInterpolator(new LinearInterpolator());
         animDiameter.setStartDelay(additionalDelay);
         animDiameter.addListener(new AnimatorListenerAdapter() {
@@ -323,7 +335,7 @@ public class MorphLayout extends FrameLayout {
 
                 setVisibilityChildren(false, false); // Ensure that children are INVISIBLE
                 mState = State.REVERTING;
-                if(mListener != null) {
+                if (mListener != null) {
                     mListener.onRevertStart();
                 }
             }
@@ -337,14 +349,14 @@ public class MorphLayout extends FrameLayout {
         });
 
         final ObjectAnimator animX = ObjectAnimator.ofFloat(mFab, "translationX", 0);
-        animX.setDuration(DURATION_MOVE);
+        animX.setDuration(translateDuration);
         animX.setInterpolator(new LinearInterpolator());
-        animX.setStartDelay(DURATION_SCALE + additionalDelay);
+        animX.setStartDelay(scaleDuration + additionalDelay);
 
         final ObjectAnimator animY = ObjectAnimator.ofFloat(mFab, "translationY", 0);
-        animY.setDuration(DURATION_MOVE);
+        animY.setDuration(translateDuration);
         animY.setInterpolator(new DecelerateInterpolator(2));
-        animY.setStartDelay(DURATION_SCALE + additionalDelay);
+        animY.setStartDelay(scaleDuration + additionalDelay);
         animY.addListener(new AnimatorListenerAdapter() {
 
             @Override
@@ -356,10 +368,19 @@ public class MorphLayout extends FrameLayout {
             @Override
             public void onAnimationEnd(Animator animation) {
 
+                mFab.getIcon().setAlpha(0xFF);
                 mState = State.NONE;
-                if(mListener != null) {
+                if (mListener != null) {
                     mListener.onRevertEnd();
                 }
+            }
+        });
+        animY.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+
+                mFab.getIcon().setAlpha((int) (0xFF * animation.getAnimatedFraction()));
             }
         });
 
