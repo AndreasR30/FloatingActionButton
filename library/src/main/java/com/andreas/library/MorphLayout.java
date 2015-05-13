@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 
@@ -154,32 +155,30 @@ public class MorphLayout extends FrameLayout {
         super.addView(child, index, params);
     }
 
-    public void morph(boolean animateChildren) {
+    public void morph(boolean animateChildren, boolean swapInterpolator) {
 
         Point p = new Point();
         p.x = getWidth() / 2;
         p.y = getHeight() / 2;
-        morph(p, animateChildren);
+        morph(p, animateChildren, swapInterpolator);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void morph(Point circleCenter, final boolean animateChildren) {
+    public void morph(Point circleCenter, final boolean animateChildren, boolean swapInterpolator) {
 
         if (mState != State.NONE) {
             return;
         }
 
-        mFab.setTranslationX(0);
-        mFab.setTranslationY(0);
         setVisibilityChildren(false, false);
         mFab.setVisibility(VISIBLE);
         mState = State.MORPHING;
-        if(mListener != null) {
-            mListener.onMorphStart();
-        }
         mCirclePaint.setColor(mFab.getCurrentColor());
 
         if(!isHoneycombOrHigher()) {
+            if(mListener != null) {
+                mListener.onMorphStart(0);
+            }
             mState = State.MORPHED;
             mFab.setVisibility(INVISIBLE);
             invalidate();
@@ -191,6 +190,9 @@ public class MorphLayout extends FrameLayout {
             }
             return;
         }
+
+        mFab.setTranslationX(0);
+        mFab.setTranslationY(0);
 
         mCircleCenter = circleCenter;
 
@@ -208,22 +210,28 @@ public class MorphLayout extends FrameLayout {
         int diameter1 = mFab.getCircleBounds().width();
         int diameter2 = calculateDiameter(circleCenter, corners);
         //noinspection SuspiciousNameCombination
-        int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
-        int scaleDuration = diameter2 / 14;
+        final int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
+        final int scaleDuration = diameter2 / 14;
+        Interpolator[] interpolator = createInterpolator(swapInterpolator, false);
+
+        if(mListener != null) {
+            mListener.onMorphStart(translateDuration + scaleDuration);
+        }
 
         final ObjectAnimator animX = ObjectAnimator.ofFloat(mFab, "translationX", offsetX);
         animX.setDuration(translateDuration);
-        animX.setInterpolator(new LinearInterpolator());
+        animX.setInterpolator(interpolator[0]);
 
         final ObjectAnimator animY = ObjectAnimator.ofFloat(mFab, "translationY", offsetY);
         animY.setDuration(translateDuration);
-        animY.setInterpolator(new AccelerateInterpolator(2));
+        animY.setInterpolator(interpolator[1]);
         animY.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
 
-                mFab.getIcon().setAlpha((int) (0xFF * (1 - animation.getAnimatedFraction())));
+                float fraction = animation.getCurrentPlayTime() / (float) animation.getDuration();
+                mFab.getIcon().setAlpha((int) (0xFF * (1 - fraction)));
             }
         });
 
@@ -261,31 +269,29 @@ public class MorphLayout extends FrameLayout {
         animDiameter.start();
     }
 
-    public void revert(boolean animateChildren) {
+    public void revert(boolean animateChildren, boolean swapInterpolator) {
 
         Point p = new Point();
         p.x = getWidth() / 2;
         p.y = getHeight() / 2;
-        revert(p, animateChildren);
+        revert(p, animateChildren, swapInterpolator);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void revert(Point circleCenter, boolean animateChildren) {
+    public void revert(Point circleCenter, boolean animateChildren, boolean swapInterpolator) {
 
         if (mState != State.MORPHED || (mFadeAnimator != null && mFadeAnimator.isRunning())) {
             return;
         }
 
         mFab.setVisibility(INVISIBLE);
-        mFab.setTranslationX(0);
-        mFab.setTranslationY(0);
         mCirclePaint.setColor(mFab.getCurrentColor());
 
         if(!isHoneycombOrHigher()) {
             setVisibilityChildren(false, false);
             mState = State.REVERTING;
             if(mListener != null) {
-                mListener.onRevertStart();
+                mListener.onRevertStart(0);
             }
             mFab.setVisibility(VISIBLE);
             mState = State.NONE;
@@ -295,6 +301,9 @@ public class MorphLayout extends FrameLayout {
             }
             return;
         }
+
+        mFab.setTranslationX(0);
+        mFab.setTranslationY(0);
 
         int additionalDelay = 0;
         if(animateChildren) {
@@ -321,8 +330,9 @@ public class MorphLayout extends FrameLayout {
         int diameter1 = calculateDiameter(circleCenter, corners);
         int diameter2 = mFab.getCircleBounds().width();
         //noinspection SuspiciousNameCombination
-        int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
-        int scaleDuration = diameter1 / 14;
+        final int translateDuration = (int) (Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) / 3);
+        final int scaleDuration = diameter1 / 14;
+        Interpolator[] interpolator = createInterpolator(swapInterpolator, true);
 
         final ObjectAnimator animDiameter = ObjectAnimator.ofInt(this, "circleDiameter", diameter1, diameter2);
         animDiameter.setDuration(scaleDuration);
@@ -336,7 +346,7 @@ public class MorphLayout extends FrameLayout {
                 setVisibilityChildren(false, false); // Ensure that children are INVISIBLE
                 mState = State.REVERTING;
                 if (mListener != null) {
-                    mListener.onRevertStart();
+                    mListener.onRevertStart(scaleDuration + translateDuration);
                 }
             }
 
@@ -350,12 +360,12 @@ public class MorphLayout extends FrameLayout {
 
         final ObjectAnimator animX = ObjectAnimator.ofFloat(mFab, "translationX", 0);
         animX.setDuration(translateDuration);
-        animX.setInterpolator(new LinearInterpolator());
+        animX.setInterpolator(interpolator[0]);
         animX.setStartDelay(scaleDuration + additionalDelay);
 
         final ObjectAnimator animY = ObjectAnimator.ofFloat(mFab, "translationY", 0);
         animY.setDuration(translateDuration);
-        animY.setInterpolator(new DecelerateInterpolator(2));
+        animY.setInterpolator(interpolator[1]);
         animY.setStartDelay(scaleDuration + additionalDelay);
         animY.addListener(new AnimatorListenerAdapter() {
 
@@ -380,7 +390,8 @@ public class MorphLayout extends FrameLayout {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
 
-                mFab.getIcon().setAlpha((int) (0xFF * animation.getAnimatedFraction()));
+                float fraction = animation.getCurrentPlayTime() / (float) animation.getDuration();
+                mFab.getIcon().setAlpha((int) (0xFF * fraction));
             }
         });
 
@@ -428,6 +439,17 @@ public class MorphLayout extends FrameLayout {
         return max * 2;
     }
 
+    private Interpolator[] createInterpolator(boolean swapInterpolator, boolean revert) {
+
+        Interpolator linear = new LinearInterpolator();
+        Interpolator accelerated = revert ? new DecelerateInterpolator(2) : new AccelerateInterpolator(2);
+        if(!swapInterpolator) {
+            return new Interpolator[] {linear, accelerated};
+        } else {
+            return new Interpolator[] {accelerated, linear};
+        }
+    }
+
     private boolean isHoneycombOrHigher() {
 
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
@@ -465,13 +487,13 @@ public class MorphLayout extends FrameLayout {
 
     public interface OnMorphListener {
 
-        public void onMorphStart(); // State: Morphing, Children: INVISIBLE, Fab: VISIBLE and no translation
+        void onMorphStart(int duration); // State: Morphing, Children: INVISIBLE, Fab: VISIBLE and no translation
 
-        public void onMorphEnd(); // State: Morphed, Children: INVISIBLE, Fab: INVISIBLE and no translation
+        void onMorphEnd(); // State: Morphed, Children: INVISIBLE, Fab: INVISIBLE and no translation
 
-        public void onRevertStart(); // State: Reverting, Children: INVISIBLE, Fab: INVISIBLE and no translation
+        void onRevertStart(int duration); // State: Reverting, Children: INVISIBLE, Fab: INVISIBLE and no translation
 
-        public void onRevertEnd(); // State: None, Children: INVISIBLE, Fab: VISIBLE and no translation
+        void onRevertEnd(); // State: None, Children: INVISIBLE, Fab: VISIBLE and no translation
     }
 
     private static class SavedState extends BaseSavedState {

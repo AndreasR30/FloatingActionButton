@@ -370,11 +370,6 @@ public class FloatingActionButton extends View implements Checkable {
         return mCurColor;
     }
 
-    protected void fadeOutIcon(int time) {
-
-        // TODO: Implement this method
-    }
-
     private boolean isLollipopOrHigher() {
 
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;

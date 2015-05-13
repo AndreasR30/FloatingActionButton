@@ -1,7 +1,10 @@
 package com.andreas.floatingactionbutton;
 
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,10 +13,11 @@ import com.andreas.library.FloatingActionButton;
 import com.andreas.library.MorphLayout;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MorphLayout.OnMorphListener {
 
     private FloatingActionButton mFab;
     private MorphLayout mFabLayer;
+    private SlideDrawable mSlideBackground;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,18 +25,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mFabLayer = (MorphLayout) findViewById(R.id.layer_morphableLayout);
-        mFab = (FloatingActionButton) findViewById(R.id.fab_floatingActionButton);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.bar_toolbar);
+        toolbar.setTitle("");
+        setSupportActionBar(toolbar);
 
-        mFabLayer.setFab(mFab);
+        mFab = (FloatingActionButton) findViewById(R.id.fab_floatingActionButton);
         mFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
 
-                mFabLayer.morph(true);
+                mFab.toggle();
+                mFabLayer.morph(true, true);
             }
         });
+
+        mFabLayer = (MorphLayout) findViewById(R.id.layer_morphableLayout);
+        mFabLayer.setMorphListener(this);
+        mFabLayer.setFab(mFab);
+
+        View slideView = findViewById(R.id.slide_view);
+        Drawable layer1 = new ColorDrawable(getResources().getColor(android.R.color.white));
+        Drawable layer2 = new ColorDrawable(getResources().getColor(R.color.theme_secondary));
+        mSlideBackground = new SlideDrawable(new Drawable[] {layer1, layer2}, SlideDrawable.MODE_VERTICAL, false);
+        slideView.setBackgroundDrawable(mSlideBackground);
     }
 
 
@@ -60,9 +76,32 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
 
         if(mFabLayer.getState() == MorphLayout.State.MORPHED) {
-            mFabLayer.revert(true);
+            mFab.toggle();
+            mFabLayer.revert(true, true);
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onMorphStart(int duration) {
+
+        mSlideBackground.startTransition(duration);
+    }
+
+    @Override
+    public void onMorphEnd() {
+
+    }
+
+    @Override
+    public void onRevertStart(int duration) {
+
+        mSlideBackground.reverseTransition(duration);
+    }
+
+    @Override
+    public void onRevertEnd() {
+
     }
 }
